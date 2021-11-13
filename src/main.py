@@ -37,12 +37,13 @@ import Individual
 
 def main():
 
-    num_runs = 20
-    total_generations = 100
+    num_runs = 5
+    total_generations = 200
     num_elements_to_mutate = 1
     bit_string_length = 20
     num_parents = 20
     num_children = 20
+    upper_limit = 10
     # adding novelty 
     novelty_k = 5
     novelty_selection_prop = 0.5
@@ -52,8 +53,10 @@ def main():
     k = bit_string_length - 1
 
     alg_landscape = Landscape.Landscape(n,k)
-    fitness, solutions, diversity = evolutionary_algorithm(total_generations=100, \
-                num_parents=10, num_children=10, bit_string_length=10, num_elements_to_mutate=1, crossover=False)
+    fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
+                    num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
+                    num_elements_to_mutate=num_elements_to_mutate, crossover=True, mutation=True, \
+                    novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, upper_limit=upper_limit)
     print(f'fit: {fitness[-1]} | sol: {solutions[-1]} | div: {diversity[-1]}')
 
 
@@ -61,8 +64,10 @@ def main():
     solutions_results = {}
     diversity_results = {}
 
-    run_names = ["mutation_only", "crossover_only", "crossover_mutation"]
-    modifications = [[False, True], [True, False], [True, True]]
+    # run_names = ["mutation_only", "crossover_only", "crossover_mutation"]
+    run_names = ["crossover_mutation"]
+    # modifications = [[False, True], [True, False], [True, True]]
+    modifications = [[True, True]]
 
     for run_index, run_name in enumerate(run_names):
 
@@ -77,7 +82,7 @@ def main():
             fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
                     num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
                     num_elements_to_mutate=num_elements_to_mutate, crossover=modifications[run_index][0], mutation=modifications[run_index][1], \
-                    novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length)
+                    novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, upper_limit=upper_limit)
             
             # save the results
             experiment_results[run_name][run_num] = fitness
@@ -96,7 +101,8 @@ def main():
 #           ALGORITHM          #
 ################################
 
-def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=10, bit_string_length=10, num_elements_to_mutate=1, crossover=True, mutation=True, novelty_k = 0, novelty_selection_prop = 0, max_archive_length = 100):
+def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=10, bit_string_length=10, num_elements_to_mutate=1, \
+    crossover=True, mutation=True, novelty_k = 0, novelty_selection_prop = 0, max_archive_length = 100, upper_limit = 3):
     """
         parameters: 
         fitness_funciton: (callable function) that return the fitness of a genome 
@@ -120,18 +126,22 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
     solutions_over_time = np.zeros((total_generations,bit_string_length))
     diversity_over_time = np.zeros(total_generations)
     solution_archive = []
+
+    change_in_fitness = 0
+    last_fitness = 0
+    last_last_fitness = 0
     
     ################################
     #   INITILIZATING POPULATION   #
     ################################
 
     # create the predator (random instantiation)
-    predator = Individual.Individual(bit_string_length)
+    predator = Individual.Individual(bit_string_length, upper_limit)
 
     # create an initial population 
     population = [] # keep population of individuals in a list
     for i in range(num_parents): # only create parents for initialization (the mu in mu+lambda)
-        population.append(Individual.Individual(bit_string_length)) # generate new random individuals as parents
+        population.append(Individual.Individual(bit_string_length, upper_limit)) # generate new random individuals as parents
     
     # get population fitness
     for i in range(len(population)):
@@ -147,6 +157,16 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
     ################################
 
     for generation_num in range(total_generations): # repeat
+
+        # # check for percent change in fitness. If not enough, add more muations
+        # if generation_num > 50:
+        #     last_fitness = fitness_over_time[generation_num-1]
+        #     last_last_fitness = fitness_over_time[generation_num-50]
+        #     change_in_fitness = ((last_fitness - last_last_fitness)/last_last_fitness)
+        #     if change_in_fitness <= 0 and generation_num % 10==0:
+        #         num_elements_to_mutate += 1
+        #         if num_elements_to_mutate >= bit_string_length:
+        #             num_elements_to_mutate = bit_string_length
         
         # the modification procedure
         new_children = [] # keep children separate for now (lambda in mu+lambda)
@@ -176,7 +196,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
                     while len(elements_to_mutate)<num_elements_to_mutate:
                         elements_to_mutate.add(np.random.randint(bit_string_length)) # randomly select the location in the child bit string to mutate
                     for this_element_to_mutate in elements_to_mutate:
-                        this_child.genome[this_element_to_mutate] = (this_child.genome[this_element_to_mutate] + 1) % 2 # flip the bit at the chosen location
+                        this_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
 
         
             
@@ -218,7 +238,13 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             this_ind = population.pop()
             if not this_ind in new_population:
                 new_population.append(this_ind)
+
+        # # half way through the generation, switch 25% of the genes of the predator
+        # if generation_num == (total_generations / 2):
+        #     # print("SWITCHING IT UP!")
+        #     predator.genome[0:int(len(predator.genome)*(0.25))] = np.random.randint(0,3,size=int(len(predator.genome)*(0.25)))
         
+
         
     return fitness_over_time, solutions_over_time, diversity_over_time 
 

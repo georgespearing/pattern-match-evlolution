@@ -2,8 +2,8 @@ import numpy as np
 
 class Individual:
 
-    def __init__(self, genome_length):
-        self.genome = np.random.randint(low=0, high=3, size=genome_length)
+    def __init__(self, genome_length, upper_limit):
+        self.genome = np.random.randint(low=0, high=upper_limit, size=genome_length)
         self.fitness = 0
         self.novelty = 0
         
