@@ -130,3 +130,6 @@ dmypy.json
 
 # VSCode files
 .vscode/
+
+# Do not include images please
+*.png
