@@ -38,12 +38,12 @@ import Individual
 def main():
 
     num_runs = 5
-    total_generations = 200
+    total_generations = 500
     num_elements_to_mutate = 1
     bit_string_length = 20
     num_parents = 20
     num_children = 20
-    upper_limit = 10
+    upper_limit = 3
     # adding novelty 
     novelty_k = 5
     novelty_selection_prop = 0.5
@@ -175,15 +175,21 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             # inheretance
             # parents = sorted(population, key=lambda individual: individual.fitness, reverse=True)
             # [parent1, parent2] = parents[0:2] # most fit parents
-            [parent1, parent2] = np.random.choice(population, size=2) # pick 2 random parents
+            [parent1, parent2, parent3, parent4] = np.random.choice(population, size=4) # pick 2 random parents
             child1 = copy.deepcopy(parent1) # initialize children as perfect copies of their parents
             child2 = copy.deepcopy(parent2)
             
-            # crossover -- intelligently combine the best parts of two parents
+            # crossover -- intelligently combine the best parts of many parents
             if crossover:
                 # print(f'{child1.genome} || {child2.genome} ')#>>> {parent1.match_indexes} >>> {parent2.match_indexes}')
-                child1.genome[parent2.match_indexes] = parent2.genome[parent2.match_indexes]
-                child2.genome[parent1.match_indexes] = parent1.genome[parent1.match_indexes]
+                # child1.genome[parent2.match_indexes] = parent2.genome[parent2.match_indexes] # for replacing indexes that match predators
+                # child2.genome[parent1.match_indexes] = parent1.genome[parent1.match_indexes] # for replacing indexes that match predator
+                child1.genome[parent2.match_indexes[0]:parent2.match_indexes[1]] = parent2.genome[parent2.match_indexes[0]:parent2.match_indexes[1]] # for replacing patterns that match 
+                child1.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
+                child1.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
+                child2.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] = parent1.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] # for replacing patterns that match 
+                child2.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
+                child2.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
                 # print(f'{child1.genome} <> {child2.genome}')
                 # [crossover_point1, crossover_point2] = sorted(np.random.randint(0,bit_string_length,2)) # crossover points for 2-point crossover (sorted to make indexing easier in the next step)
                 # child1.genome[crossover_point1:crossover_point2+1] = parent2.genome[crossover_point1:crossover_point2+1] # take the point between the crossover points and swap in the genes from the other parent
@@ -266,17 +272,19 @@ def get_fitness(predator, prey):
     substring = ""
     match_start_index = 0
     match_end_index = 0
-    # for start_index in range(len(str_prey)-1):
-    for end_index in range(1,len(str_prey)):
-        prey_substring = str_prey[0:end_index]
-        is_substring = prey_substring in str_predator
-        if (is_substring and len(prey_substring)>len(substring)):
-            substring = prey_substring
-            # match_start_index = start_index
-            match_end_index = end_index
+    for start_index in range(len(str_prey)):
+        # for end_index in range(1,len(str_prey)):
+        for end_index in range(start_index, len(str_prey)):
+            prey_substring = str_prey[0:end_index]
+            is_substring = prey_substring in str_predator
+            if (is_substring and len(prey_substring)>len(substring)):
+                substring = prey_substring
+                match_start_index = start_index
+                match_end_index = end_index
     
     # return the fitness based on the length of the substring found
-    return len(substring), prey.genome==predator.genome
+    return len(substring), [match_start_index, match_end_index]
+    # return len(substring), prey.genome==predator.genome
 
 def update_archive(solution_archive, individual, max_archive_length):
     
