@@ -38,26 +38,28 @@ import Individual
 def main():
 
     num_runs = 5
-    total_generations = 500
+    total_generations = 300
     num_elements_to_mutate = 1
     bit_string_length = 20
     num_parents = 20
     num_children = 20
-    upper_limit = 3
+    upper_limit = 10
     # adding novelty 
     novelty_k = 5
-    novelty_selection_prop = 0.5
-    max_archive_length = 100
+    novelty_selection_prop = 0.4 # lower number means more novelty. .3 or .4 works the best
+    max_archive_length = 50
 
-    n = bit_string_length
-    k = bit_string_length - 1
+    num_random_parents = [19] # with replacement
 
-    alg_landscape = Landscape.Landscape(n,k)
-    fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
-                    num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
-                    num_elements_to_mutate=num_elements_to_mutate, crossover=True, mutation=True, \
-                    novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, upper_limit=upper_limit)
-    print(f'fit: {fitness[-1]} | sol: {solutions[-1]} | div: {diversity[-1]}')
+    # n = bit_string_length
+    # k = bit_string_length - 1
+
+    # alg_landscape = Landscape.Landscape(n,k)
+    # fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
+    #                 num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
+    #                 num_elements_to_mutate=num_elements_to_mutate, crossover=True, mutation=True, \
+    #                 novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, upper_limit=upper_limit)
+    # print(f'fit: {fitness[-1]} | sol: {solutions[-1]} | div: {diversity[-1]}')
 
 
     experiment_results = {}
@@ -69,32 +71,38 @@ def main():
     # modifications = [[False, True], [True, False], [True, True]]
     modifications = [[True, True]]
 
-    for run_index, run_name in enumerate(run_names):
+    for parents in num_random_parents: # run a bunch of different parent combindations
 
-        experiment_results[run_name] = np.zeros((num_runs, total_generations))
-        solutions_results[run_name] = np.zeros((num_runs, total_generations, bit_string_length))
-        diversity_results[run_name] = np.zeros((num_runs, total_generations))
+        for run_index, run_name in enumerate(run_names):
 
-        for run_num in range(num_runs):
-            start_time = time.time()
-            # run the algorithm
-            alg_landscape = Landscape.Landscape(n=n, k=k)
-            fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
-                    num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
-                    num_elements_to_mutate=num_elements_to_mutate, crossover=modifications[run_index][0], mutation=modifications[run_index][1], \
-                    novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, upper_limit=upper_limit)
-            
-            # save the results
-            experiment_results[run_name][run_num] = fitness
-            solutions_results[run_name][run_num] = solutions
-            diversity_results[run_name][run_num] = diversity
-            print(run_name, run_num, fitness[-1])
+            experiment_results[run_name] = np.zeros((num_runs, total_generations))
+            solutions_results[run_name] = np.zeros((num_runs, total_generations, bit_string_length), dtype=int)
+            diversity_results[run_name] = np.zeros((num_runs, total_generations))
 
-    # plotting
-    data_names = run_names
+            for run_num in range(num_runs):
+                # print(f'{run_name} {run_num} fitness: ... ', end='')
 
-    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
-    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
+                # start_time = time.time()
+                # run the algorithm
+                # alg_landscape = Landscape.Landscape(n=n, k=k)
+                fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
+                        num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
+                        num_elements_to_mutate=num_elements_to_mutate, crossover=modifications[run_index][0], mutation=modifications[run_index][1], \
+                        novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, \
+                        upper_limit=upper_limit, num_random_parents=parents)
+                
+                # save the results
+                experiment_results[run_name][run_num] = fitness
+                solutions_results[run_name][run_num] = solutions
+                diversity_results[run_name][run_num] = diversity
+                print(f'{run_name}, {run_num}, {fitness[-1]}, {solutions[-1].astype(int)}')
+                # print(fitness[-1])
+
+        # plotting
+        data_names = run_names
+
+        plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'{parents}parents', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
+        plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'{parents}parents', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
 
 
 ################################
@@ -102,7 +110,7 @@ def main():
 ################################
 
 def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=10, bit_string_length=10, num_elements_to_mutate=1, \
-    crossover=True, mutation=True, novelty_k = 0, novelty_selection_prop = 0, max_archive_length = 100, upper_limit = 3):
+    crossover=True, mutation=True, novelty_k = 0, novelty_selection_prop = 0, max_archive_length = 100, upper_limit = 3, num_random_parents = 4):
     """
         parameters: 
         fitness_funciton: (callable function) that return the fitness of a genome 
@@ -137,19 +145,21 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
 
     # create the predator (random instantiation)
     predator = Individual.Individual(bit_string_length, upper_limit)
+    print(f'predator genome:         {predator.genome}')
 
     # create an initial population 
     population = [] # keep population of individuals in a list
     for i in range(num_parents): # only create parents for initialization (the mu in mu+lambda)
         population.append(Individual.Individual(bit_string_length, upper_limit)) # generate new random individuals as parents
-    
+    # print(f'population 0 genome:     {population[0].genome}')
+
     # get population fitness
     for i in range(len(population)):
         population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
 
     # add population to solution archive to initialize it
-    for i in range(len(population)):
-        solution_archive.append(population[i])
+    # for i in range(len(population)):
+    #     solution_archive.append(population[i])
     
 
     ################################
@@ -157,6 +167,9 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
     ################################
 
     for generation_num in range(total_generations): # repeat
+
+        # if generation_num % 100 == 0:
+        #     print(generation_num)
 
         # # check for percent change in fitness. If not enough, add more muations
         # if generation_num > 50:
@@ -174,49 +187,53 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             
             # inheretance
             # parents = sorted(population, key=lambda individual: individual.fitness, reverse=True)
-            # [parent1, parent2] = parents[0:2] # most fit parents
-            [parent1, parent2, parent3, parent4] = np.random.choice(population, size=4) # pick 2 random parents
-            child1 = copy.deepcopy(parent1) # initialize children as perfect copies of their parents
-            child2 = copy.deepcopy(parent2)
+            # random_parents = parents[0:num_random_parents] # most fit parents
+            random_parents = np.random.choice(population, size=num_random_parents) # pick 5 random parents
+            new_child = (copy.deepcopy(random_parents[0])) # initialize children as perfect copies of their parents
+            # new_children.append(copy.deepcopy(parent2))
             
             # crossover -- intelligently combine the best parts of many parents
             if crossover:
+                # print(f'predator: {predator.genome}')
+                # print(f'before: {new_child.genome}')
+                for parent in random_parents[1:]: # combine the information from multiple parents into one child.
                 # print(f'{child1.genome} || {child2.genome} ')#>>> {parent1.match_indexes} >>> {parent2.match_indexes}')
                 # child1.genome[parent2.match_indexes] = parent2.genome[parent2.match_indexes] # for replacing indexes that match predators
                 # child2.genome[parent1.match_indexes] = parent1.genome[parent1.match_indexes] # for replacing indexes that match predator
-                child1.genome[parent2.match_indexes[0]:parent2.match_indexes[1]] = parent2.genome[parent2.match_indexes[0]:parent2.match_indexes[1]] # for replacing patterns that match 
-                child1.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
-                child1.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
-                child2.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] = parent1.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] # for replacing patterns that match 
-                child2.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
-                child2.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
+                    new_child.genome[parent.match_indexes[0]:parent.match_indexes[1]] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
+                    # child.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
+                    # child.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
+                # child2.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] = parent1.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] # for replacing patterns that match 
+                # child2.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
+                # child2.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
                 # print(f'{child1.genome} <> {child2.genome}')
                 # [crossover_point1, crossover_point2] = sorted(np.random.randint(0,bit_string_length,2)) # crossover points for 2-point crossover (sorted to make indexing easier in the next step)
                 # child1.genome[crossover_point1:crossover_point2+1] = parent2.genome[crossover_point1:crossover_point2+1] # take the point between the crossover points and swap in the genes from the other parent
                 # child2.genome[crossover_point1:crossover_point2+1] = parent1.genome[crossover_point1:crossover_point2+1]
-                
+                # print(f'after: {new_child.genome}')
             # mutation
             if mutation:
-                for this_child in [child1,child2]:
-                    elements_to_mutate = set() 
-                    while len(elements_to_mutate)<num_elements_to_mutate:
-                        elements_to_mutate.add(np.random.randint(bit_string_length)) # randomly select the location in the child bit string to mutate
-                    for this_element_to_mutate in elements_to_mutate:
-                        this_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
+                # for this_child in [child1,child2]:
+                elements_to_mutate = set() 
+                while len(elements_to_mutate)<num_elements_to_mutate:
+                    elements_to_mutate.add(np.random.randint(bit_string_length)) # randomly select the location in the child bit string to mutate
+                for this_element_to_mutate in elements_to_mutate:
+                    # new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
+                    new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
 
         
             
-            new_children.extend((child1,child2)) # add children to the new_children list
-            
+            # new_children.extend((child1,child2)) # add children to the new_children list
+            new_children.append(new_child) # add children to the new_children list
         ################################
         #     ASSESSMENT PROCEDURE     #
         ################################
         for i in range(len(new_children)):
             new_children[i].fitness, new_children[i].match_indexes = get_fitness(predator, new_children[i]) # assign fitness to each child 
 
-        for i in range(len(new_children)):
-            new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
-            solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
+        # for i in range(len(new_children)):
+        #     new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
+        #     solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
             
         # NOTE: recording keeping could be on just parents/survivors or whole population.  
         # By moving it up here above selection, we also include the children while record keeping
@@ -251,7 +268,8 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         #     predator.genome[0:int(len(predator.genome)*(0.25))] = np.random.randint(0,3,size=int(len(predator.genome)*(0.25)))
         
 
-        
+    # print(f'child genome:            {new_child.genome}')
+    
     return fitness_over_time, solutions_over_time, diversity_over_time 
 
 ################################
@@ -286,6 +304,11 @@ def get_fitness(predator, prey):
     return len(substring), [match_start_index, match_end_index]
     # return len(substring), prey.genome==predator.genome
 
+
+################################
+#             ARCHIVE          #
+################################
+
 def update_archive(solution_archive, individual, max_archive_length):
     
     solution_archive = sorted(solution_archive, key=lambda individual: individual.novelty)
@@ -297,6 +320,11 @@ def update_archive(solution_archive, individual, max_archive_length):
         solution_archive.pop(0)
         solution_archive.append(individual)
     return solution_archive
+
+
+################################
+#           NOVELTY            #
+################################
 
 def get_novelty(solution_archive, individual, k):
     
@@ -316,7 +344,7 @@ def get_novelty(solution_archive, individual, k):
 #       PLOTTING RESULTS       #
 ################################
 
-def plot_mean_and_bootstrapped_ci_over_time(input_data = None, name = "change me", x_label = "change me", y_label="change me", y_limit = None, plot_bootstrap = True):
+def plot_mean_and_bootstrapped_ci_over_time(input_data = None, name = "change me", title = "change me", x_label = "change me", y_label="change me", y_limit = None, plot_bootstrap = True):
     """
     
     parameters: 
@@ -345,7 +373,7 @@ def plot_mean_and_bootstrapped_ci_over_time(input_data = None, name = "change me
 #                 if this_gen%10==0: print(this_gen)
                 boostrap_ci_generation_found[:,this_gen] = bootstrap.ci(this_input_data[:,this_gen], np.mean, alpha=0.05)
 
-        ax.set_title(f'{y_label} over generations')
+        ax.set_title(f'{y_label} over generations {title}')
         ax.plot(np.arange(total_generations), np.mean(this_input_data,axis=0), label = this_name) # plot the fitness over time
         if plot_bootstrap:
             ax.fill_between(np.arange(total_generations), boostrap_ci_generation_found[0,:], boostrap_ci_generation_found[1,:],alpha=0.3) # plot, and fill, the confidence interval for fitness over time
@@ -355,7 +383,7 @@ def plot_mean_and_bootstrapped_ci_over_time(input_data = None, name = "change me
         plt.legend(loc='best'); # add legend
 
     # plt.show()
-    plt.savefig(f"{y_label}_over_generations.png")
+    plt.savefig(f"{y_label}_over_generations_{title}.png")
         
 
 if __name__ == '__main__':
