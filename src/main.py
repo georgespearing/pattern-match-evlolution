@@ -37,7 +37,7 @@ import Individual
 
 def main():
 
-    num_runs = 5
+    num_runs = 3
     total_generations = 300
     num_elements_to_mutate = 1
     bit_string_length = 20
@@ -46,10 +46,10 @@ def main():
     upper_limit = 10
     # adding novelty 
     novelty_k = 5
-    novelty_selection_prop = 0.4 # lower number means more novelty. .3 or .4 works the best
+    novelty_selection_prop = 0.5 # lower number means more novelty. .3 or .4 works the best
     max_archive_length = 50
 
-    num_random_parents = [19] # with replacement
+    num_random_parents = [2] # with replacement
 
     # n = bit_string_length
     # k = bit_string_length - 1
@@ -67,8 +67,10 @@ def main():
     diversity_results = {}
 
     # run_names = ["mutation_only", "crossover_only", "crossover_mutation"]
+    # run_names = ["mutation", "crossover_mutation"]
     run_names = ["crossover_mutation"]
     # modifications = [[False, True], [True, False], [True, True]]
+    # modifications = [[False, True], [True, True]]
     modifications = [[True, True]]
 
     for parents in num_random_parents: # run a bunch of different parent combindations
@@ -145,7 +147,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
 
     # create the predator (random instantiation)
     predator = Individual.Individual(bit_string_length, upper_limit)
-    print(f'predator genome:         {predator.genome}')
+    print(f'predator genome:             {predator.genome}')
 
     # create an initial population 
     population = [] # keep population of individuals in a list
@@ -194,24 +196,18 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             
             # crossover -- intelligently combine the best parts of many parents
             if crossover:
-                # print(f'predator: {predator.genome}')
-                # print(f'before: {new_child.genome}')
                 for parent in random_parents[1:]: # combine the information from multiple parents into one child.
-                # print(f'{child1.genome} || {child2.genome} ')#>>> {parent1.match_indexes} >>> {parent2.match_indexes}')
-                # child1.genome[parent2.match_indexes] = parent2.genome[parent2.match_indexes] # for replacing indexes that match predators
-                # child2.genome[parent1.match_indexes] = parent1.genome[parent1.match_indexes] # for replacing indexes that match predator
                     new_child.genome[parent.match_indexes[0]:parent.match_indexes[1]] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
-                    # child.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
-                    # child.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
-                # child2.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] = parent1.genome[parent1.match_indexes[0]:parent1.match_indexes[1]] # for replacing patterns that match 
-                # child2.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] = parent3.genome[parent3.match_indexes[0]:parent3.match_indexes[1]] # for replacing patterns that match 
-                # child2.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] = parent4.genome[parent4.match_indexes[0]:parent4.match_indexes[1]] # for replacing patterns that match 
-                # print(f'{child1.genome} <> {child2.genome}')
-                # [crossover_point1, crossover_point2] = sorted(np.random.randint(0,bit_string_length,2)) # crossover points for 2-point crossover (sorted to make indexing easier in the next step)
-                # child1.genome[crossover_point1:crossover_point2+1] = parent2.genome[crossover_point1:crossover_point2+1] # take the point between the crossover points and swap in the genes from the other parent
-                # child2.genome[crossover_point1:crossover_point2+1] = parent1.genome[crossover_point1:crossover_point2+1]
-                # print(f'after: {new_child.genome}')
-            # mutation
+            
+            # # crossover/mutation
+            # if crossover:
+            #     for parent in random_parents[1:]: # combine the information from multiple parents into one child.
+            #         # generate two new inteters for index that are the same distance apart as the parent match indexes
+            #         diff = parent.match_indexes[1] - parent.match_indexes[0]
+            #         rand_start = np.random.randint(0,len(parent.genome)-diff)
+            #         new_child.genome[rand_start:rand_start+diff] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
+
+            # mutation - random bit changes
             if mutation:
                 # for this_child in [child1,child2]:
                 elements_to_mutate = set() 
@@ -235,20 +231,6 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         #     new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
         #     solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
             
-        # NOTE: recording keeping could be on just parents/survivors or whole population.  
-        # By moving it up here above selection, we also include the children while record keeping
-        # record keeping
-        population = sorted(population, key=lambda individual: individual.fitness, reverse=True) # sort the full population by each individual's fitness (from highers to lowest)
-        if population[0].fitness > solution_fitness: # if the new parent is the best found so far
-            solution = population[0].genome                 # update best solution records
-            solution_fitness = population[0].fitness
-            solution_generation = generation_num
-        fitness_over_time[generation_num] = solution_fitness # record the fitness of the current best over evolutionary time
-        solutions_over_time[generation_num] = solution
-        
-        genome_list = np.array([individual.genome for individual in population])
-        diversity = np.mean(genome_list.std(axis=0))
-        diversity_over_time[generation_num] = diversity
             
         # selection procedure
         population += new_children # combine parents with new children (the + in mu+lambda)
@@ -263,12 +245,28 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
                 new_population.append(this_ind)
 
         # # half way through the generation, switch 25% of the genes of the predator
-        # if generation_num == (total_generations / 2):
+        # if generation_num == (total_generations / 4):
         #     # print("SWITCHING IT UP!")
-        #     predator.genome[0:int(len(predator.genome)*(0.25))] = np.random.randint(0,3,size=int(len(predator.genome)*(0.25)))
+        #     predator.genome[0:int(len(predator.genome)*(0.25))] = np.random.randint(0,10,size=int(len(predator.genome)*(0.25)))
         
 
     # print(f'child genome:            {new_child.genome}')
+
+    # NOTE: recording keeping could be on just parents/survivors or whole population.  
+        # By moving it up here above selection, we also include the children while record keeping
+        # record keeping
+        population = sorted(population, key=lambda individual: individual.fitness, reverse=True) # sort the full population by each individual's fitness (from highers to lowest)
+        if population[0].fitness > solution_fitness: # if the new parent is the best found so far
+            solution = population[0].genome                 # update best solution records
+            # solution_fitness = population[0].fitness
+            solution_fitness = int(np.mean([population[i].fitness for i in range(len(population))])) # prioritize group fitness
+
+        fitness_over_time[generation_num] = solution_fitness # record the fitness of the current best over evolutionary time
+        solutions_over_time[generation_num] = solution
+        
+        genome_list = np.array([individual.genome for individual in population])
+        diversity = np.mean(genome_list.std(axis=0))
+        diversity_over_time[generation_num] = diversity
     
     return fitness_over_time, solutions_over_time, diversity_over_time 
 
@@ -292,9 +290,10 @@ def get_fitness(predator, prey):
     match_end_index = 0
     for start_index in range(len(str_prey)):
         # for end_index in range(1,len(str_prey)):
-        for end_index in range(start_index, len(str_prey)):
-            prey_substring = str_prey[0:end_index]
-            is_substring = prey_substring in str_predator
+        for end_index in range(start_index+1, len(str_prey)):
+            prey_substring = str_prey[start_index:end_index]
+            # is_substring = prey_substring in str_predator
+            is_substring = prey_substring == str_predator[start_index:end_index]
             if (is_substring and len(prey_substring)>len(substring)):
                 substring = prey_substring
                 match_start_index = start_index
