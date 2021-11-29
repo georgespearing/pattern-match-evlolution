@@ -37,7 +37,7 @@ import Individual
 
 def main():
 
-    num_runs = 3
+    num_runs = 5
     total_generations = 300
     num_elements_to_mutate = 1
     bit_string_length = 20
@@ -49,7 +49,7 @@ def main():
     novelty_selection_prop = 0.5 # lower number means more novelty. .3 or .4 works the best
     max_archive_length = 50
 
-    num_random_parents = [2] # with replacement
+    num_random_parents = [10] # with replacement
 
     # n = bit_string_length
     # k = bit_string_length - 1
@@ -67,11 +67,11 @@ def main():
     diversity_results = {}
 
     # run_names = ["mutation_only", "crossover_only", "crossover_mutation"]
-    # run_names = ["mutation", "crossover_mutation"]
-    run_names = ["crossover_mutation"]
+    run_names = ["mutation", "2_point_crossover", "combinational_crossover"]
+    # run_names = ["crossover_mutation"]
     # modifications = [[False, True], [True, False], [True, True]]
-    # modifications = [[False, True], [True, True]]
-    modifications = [[True, True]]
+    modifications = [['None', True], ['2Point', True], ['Combinational', True]]
+    # modifications = [[True, True]]
 
     for parents in num_random_parents: # run a bunch of different parent combindations
 
@@ -103,8 +103,8 @@ def main():
         # plotting
         data_names = run_names
 
-        plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'{parents}parents', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
-        plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'{parents}parents', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
+        plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'combination_methods', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
+        plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'combination_methods', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
 
 
 ################################
@@ -195,17 +195,15 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             # new_children.append(copy.deepcopy(parent2))
             
             # crossover -- intelligently combine the best parts of many parents
-            if crossover:
+            if crossover=='Combinational':
                 for parent in random_parents[1:]: # combine the information from multiple parents into one child.
                     new_child.genome[parent.match_indexes[0]:parent.match_indexes[1]] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
             
-            # # crossover/mutation
-            # if crossover:
-            #     for parent in random_parents[1:]: # combine the information from multiple parents into one child.
-            #         # generate two new inteters for index that are the same distance apart as the parent match indexes
-            #         diff = parent.match_indexes[1] - parent.match_indexes[0]
-            #         rand_start = np.random.randint(0,len(parent.genome)-diff)
-            #         new_child.genome[rand_start:rand_start+diff] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
+            # crossover/mutation
+            if crossover=='2Point':
+                [crossover_point1, crossover_point2] = sorted(np.random.randint(0,bit_string_length,2)) # crossover points for 2-point crossover (sorted to make indexing easier in the next step)
+                # uses the second random choice for the random parents (NOTE: due to np random choice, this could be the same parent)
+                new_child.genome[crossover_point1:crossover_point2+1] = random_parents[1].genome[crossover_point1:crossover_point2+1] # take the point between the crossover points and swap in the genes from the other parent
 
             # mutation - random bit changes
             if mutation:
