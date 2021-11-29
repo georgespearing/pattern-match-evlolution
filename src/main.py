@@ -67,10 +67,10 @@ def main():
     diversity_results = {}
 
     # run_names = ["mutation_only", "crossover_only", "crossover_mutation"]
-    run_names = ["mutation", "2_point_crossover", "combinational_crossover"]
+    run_names = ["mutation_random", "2_point_intelligent", "combinational_random", "combinational_intelligent"]
     # run_names = ["crossover_mutation"]
     # modifications = [[False, True], [True, False], [True, True]]
-    modifications = [['None', True], ['2Point', True], ['Combinational', True]]
+    modifications = [["None", "random"],["2Point", "intelligent"],['Combinational', "random"], ['Combinational', "intelligent"]]
     # modifications = [[True, True]]
 
     for parents in num_random_parents: # run a bunch of different parent combindations
@@ -206,11 +206,24 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
                 new_child.genome[crossover_point1:crossover_point2+1] = random_parents[1].genome[crossover_point1:crossover_point2+1] # take the point between the crossover points and swap in the genes from the other parent
 
             # mutation - random bit changes
-            if mutation:
+            if mutation=="random":
                 # for this_child in [child1,child2]:
                 elements_to_mutate = set() 
                 while len(elements_to_mutate)<num_elements_to_mutate:
                     elements_to_mutate.add(np.random.randint(bit_string_length)) # randomly select the location in the child bit string to mutate
+                for this_element_to_mutate in elements_to_mutate:
+                    # new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
+                    new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
+
+            # mutation - intelligent bit changes
+            if mutation=="intelligent":
+                # for this_child in [child1,child2]:
+                elements_to_mutate = set() 
+                elements_to_ignore = np.arange(new_child.match_indexes[0], new_child.match_indexes[1])
+                while len(elements_to_mutate)<num_elements_to_mutate:
+                    indexes_to_mutate = np.random.choice(np.delete(np.arange(0,bit_string_length), elements_to_ignore), size=1)
+                    # print(indexes_to_mutate)
+                    elements_to_mutate.add(indexes_to_mutate[0]) # randomly select the location in the child bit string to mutate
                 for this_element_to_mutate in elements_to_mutate:
                     # new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
                     new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
