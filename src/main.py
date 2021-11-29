@@ -37,7 +37,7 @@ import Individual
 
 def main():
 
-    num_runs = 3
+    num_runs = 5
     total_generations = 300
     num_elements_to_mutate = 1
     bit_string_length = 20
@@ -49,7 +49,7 @@ def main():
     novelty_selection_prop = 0.5 # lower number means more novelty. .3 or .4 works the best
     max_archive_length = 50
 
-    num_random_parents = [2] # with replacement
+    num_random_parents = [2, 5, 10, 15, 20] # with replacement
 
     # n = bit_string_length
     # k = bit_string_length - 1
@@ -73,38 +73,38 @@ def main():
     # modifications = [[False, True], [True, True]]
     modifications = [[True, True]]
 
-    for parents in num_random_parents: # run a bunch of different parent combindations
+    # for parents in num_random_parents: # run a bunch of different parent combindations
 
-        for run_index, run_name in enumerate(run_names):
+    for run_index, run_name in enumerate(num_random_parents):
 
-            experiment_results[run_name] = np.zeros((num_runs, total_generations))
-            solutions_results[run_name] = np.zeros((num_runs, total_generations, bit_string_length), dtype=int)
-            diversity_results[run_name] = np.zeros((num_runs, total_generations))
+        experiment_results[run_name] = np.zeros((num_runs, total_generations))
+        solutions_results[run_name] = np.zeros((num_runs, total_generations, bit_string_length), dtype=int)
+        diversity_results[run_name] = np.zeros((num_runs, total_generations))
 
-            for run_num in range(num_runs):
-                # print(f'{run_name} {run_num} fitness: ... ', end='')
+        for run_num in range(num_runs):
+            # print(f'{run_name} {run_num} fitness: ... ', end='')
 
-                # start_time = time.time()
-                # run the algorithm
-                # alg_landscape = Landscape.Landscape(n=n, k=k)
-                fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
-                        num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
-                        num_elements_to_mutate=num_elements_to_mutate, crossover=modifications[run_index][0], mutation=modifications[run_index][1], \
-                        novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, \
-                        upper_limit=upper_limit, num_random_parents=parents)
-                
-                # save the results
-                experiment_results[run_name][run_num] = fitness
-                solutions_results[run_name][run_num] = solutions
-                diversity_results[run_name][run_num] = diversity
-                print(f'{run_name}, {run_num}, {fitness[-1]}, {solutions[-1].astype(int)}')
-                # print(fitness[-1])
+            # start_time = time.time()
+            # run the algorithm
+            # alg_landscape = Landscape.Landscape(n=n, k=k)
+            fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
+                    num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
+                    num_elements_to_mutate=num_elements_to_mutate, crossover=modifications[0][0], mutation=modifications[0][1], \
+                    novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, \
+                    upper_limit=upper_limit, num_random_parents=run_name)
+            
+            # save the results
+            experiment_results[run_name][run_num] = fitness
+            solutions_results[run_name][run_num] = solutions
+            diversity_results[run_name][run_num] = diversity
+            print(f'{run_name}, {run_num}, {fitness[-1]}, {solutions[-1].astype(int)}')
+            # print(fitness[-1])
 
-        # plotting
-        data_names = run_names
+    # plotting
+    data_names = num_random_parents
 
-        plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'{parents}parents', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
-        plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'{parents}parents', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'for different # parents', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'for different # parents', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
 
 
 ################################
@@ -190,7 +190,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             # inheretance
             # parents = sorted(population, key=lambda individual: individual.fitness, reverse=True)
             # random_parents = parents[0:num_random_parents] # most fit parents
-            random_parents = np.random.choice(population, size=num_random_parents) # pick 5 random parents
+            random_parents = np.random.choice(population, size=num_random_parents) # pick random parents
             new_child = (copy.deepcopy(random_parents[0])) # initialize children as perfect copies of their parents
             # new_children.append(copy.deepcopy(parent2))
             
@@ -373,7 +373,7 @@ def plot_mean_and_bootstrapped_ci_over_time(input_data = None, name = "change me
                 boostrap_ci_generation_found[:,this_gen] = bootstrap.ci(this_input_data[:,this_gen], np.mean, alpha=0.05)
 
         ax.set_title(f'{y_label} over generations {title}')
-        ax.plot(np.arange(total_generations), np.mean(this_input_data,axis=0), label = this_name) # plot the fitness over time
+        ax.plot(np.arange(total_generations), np.mean(this_input_data,axis=0), label = f'{this_name} parents') # plot the fitness over time
         if plot_bootstrap:
             ax.fill_between(np.arange(total_generations), boostrap_ci_generation_found[0,:], boostrap_ci_generation_found[1,:],alpha=0.3) # plot, and fill, the confidence interval for fitness over time
         ax.set_xlabel(x_label) # add axes labels
