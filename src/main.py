@@ -37,13 +37,13 @@ import Individual
 
 def main():
 
-    num_runs = 3
-    total_generations = 100
+    num_runs = 2
+    total_generations = 300
     num_elements_to_mutate = 1
     bit_string_length = 20
     num_parents = 20
     num_children = 20
-    upper_limit = 10
+    upper_limit = 10 # for genome encoding
     # adding novelty 
     novelty_k = 5
     novelty_selection_prop = 0.5 # lower number means more novelty. .3 or .4 works the best
@@ -171,15 +171,24 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
 
     for generation_num in range(total_generations): # repeat
 
+        # quarter way through the generation, switch % of the genes of the predator
+        if generation_num == (total_generations // 4):
+            # print("SWITCHING IT UP!")
+            predator.genome[0:int(len(predator.genome)*(predator_change))] = np.random.randint(0,10,size=int(len(predator.genome)*(predator_change)))
+            print(f'predator change to {predator.genome}')
+
+            # get population fitness - reassesss after predator changes. 
+            for i in range(len(population)):
+                population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
         # if generation_num % 100 == 0:
         #     print(generation_num)
 
         # # check for percent change in fitness. If not enough, add more muations
         # if generation_num > 50:
         #     last_fitness = fitness_over_time[generation_num-1]
-        #     last_last_fitness = fitness_over_time[generation_num-50]
+        #     last_last_fitness = fitness_over_time[generation_num-20]
         #     change_in_fitness = ((last_fitness - last_last_fitness)/last_last_fitness)
-        #     if change_in_fitness <= 0 and generation_num % 10==0:
+        #     if change_in_fitness <= 0 and generation_num % 25==0:
         #         num_elements_to_mutate += 1
         #         if num_elements_to_mutate >= bit_string_length:
         #             num_elements_to_mutate = bit_string_length
@@ -231,7 +240,10 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         # for i in range(len(new_children)):
         #     new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
         #     solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
-            
+
+        # also reassesss all the parents (because they just fought the virus too)
+        for p in population:
+            p.fitness, p.match_indexes = get_fitness(predator, p)    
             
         # selection procedure
         population += new_children # combine parents with new children (the + in mu+lambda)
@@ -240,20 +252,15 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         
         population = sorted(population, key=lambda individual: individual.novelty, reverse=True) # sort the full population by each individual's fitness (from highers to lowest)
         while len(new_population) < num_parents:
-#             print("adding novelty")
+            # print("adding novelty")
             this_ind = population.pop()
             if not this_ind in new_population:
                 new_population.append(this_ind)
 
-        # half way through the generation, switch % of the genes of the predator
-        if generation_num == (total_generations / 2):
-            # print("SWITCHING IT UP!")
-            predator.genome[0:int(len(predator.genome)*(predator_change))] = np.random.randint(0,10,size=int(len(predator.genome)*(predator_change)))
-            print(f'predator change to {predator.genome}')
 
-    # print(f'child genome:            {new_child.genome}')
+        # print(f'child genome:            {new_child.genome}')
 
-    # NOTE: recording keeping could be on just parents/survivors or whole population.  
+        # NOTE: recording keeping could be on just parents/survivors or whole population.  
         # By moving it up here above selection, we also include the children while record keeping
         # record keeping
         population = sorted(population, key=lambda individual: individual.fitness, reverse=True) # sort the full population by each individual's fitness (from highers to lowest)
