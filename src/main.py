@@ -67,10 +67,10 @@ def main():
     diversity_results = {}
 
     # run_names = ["mutation_only", "crossover_only", "crossover_mutation"]
-    run_names = ["mutation_random", "2_point_intelligent", "combinational_random", "combinational_intelligent"]
+    run_names = ["mutation only", "2 point random crossover", "pattern matching"]
     # run_names = ["crossover_mutation"]
     # modifications = [[False, True], [True, False], [True, True]]
-    modifications = [["None", "random"],["2Point", "intelligent"],['Combinational', "random"], ['Combinational', "intelligent"]]
+    modifications = [["None", "random"],["2Point", "random"],['Combinational', "random"]]
     # modifications = [[True, True]]
 
     for parents in num_random_parents: # run a bunch of different parent combindations
@@ -103,8 +103,8 @@ def main():
         # plotting
         data_names = run_names
 
-        plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'combination_methods', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
-        plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'combination_methods', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
+        plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'combination methods', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
+        plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'combination methods', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
 
 
 ################################
