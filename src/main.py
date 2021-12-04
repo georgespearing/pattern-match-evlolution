@@ -37,10 +37,10 @@ import Individual
 
 def main():
 
-    num_runs = 5
-    total_generations = 300
+    num_runs = 10
+    total_generations = 500
     num_elements_to_mutate = 1
-    bit_string_length = 20
+    bit_string_length = 30
     num_parents = 20
     num_children = 20
     upper_limit = 10
