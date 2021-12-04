@@ -6,6 +6,7 @@ class Individual:
         self.genome = np.random.randint(low=0, high=upper_limit, size=genome_length)
         self.fitness = 0
         self.novelty = 0
+        self.age = 0
         
         # know which indexes match the predator
         self.match_indexes = [0,0]
