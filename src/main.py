@@ -177,9 +177,9 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             predator.genome[0:int(len(predator.genome)*(predator_change))] = np.random.randint(0,10,size=int(len(predator.genome)*(predator_change)))
             print(f'predator change to {predator.genome}')
 
-            # get population fitness - reassesss after predator changes. 
-            for i in range(len(population)):
-                population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
+            # # get population fitness - reassesss after predator changes. 
+            # for i in range(len(population)):
+            #     population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
         # if generation_num % 100 == 0:
         #     print(generation_num)
 
@@ -281,6 +281,8 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
     # add age to population
     for ind in population: 
         ind.age += 1
+        if ind.age >=20:
+            population = np.delete(population, ind)
 
     return fitness_over_time, solutions_over_time, diversity_over_time 
 
@@ -314,7 +316,7 @@ def get_fitness(predator, prey):
                 match_end_index = end_index
     
     # return the fitness based on the length of the substring found
-    return len(substring)-(prey.age*.1), [match_start_index, match_end_index]
+    return len(substring), [match_start_index, match_end_index]
     # return len(substring), prey.genome==predator.genome
 
 
