@@ -37,8 +37,8 @@ import Individual
 
 def main():
 
-    num_runs = 2
-    total_generations = 300
+    num_runs = 1
+    total_generations = 200
     num_elements_to_mutate = 1
     bit_string_length = 20
     num_parents = 20
@@ -157,8 +157,8 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
     # print(f'population 0 genome:     {population[0].genome}')
 
     # get population fitness
-    for i in range(len(population)):
-        population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
+    # for i in range(len(population)):
+    #     population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
 
     # add population to solution archive to initialize it
     # for i in range(len(population)):
@@ -202,6 +202,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             # random_parents = parents[0:num_random_parents] # most fit parents
             random_parents = np.random.choice(population, size=num_random_parents) # pick 5 random parents
             new_child = (copy.deepcopy(random_parents[0])) # initialize children as perfect copies of their parents
+            new_child.age = 0
             # new_children.append(copy.deepcopy(parent2))
             
             # crossover -- intelligently combine the best parts of many parents
@@ -276,6 +277,11 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         diversity = np.mean(genome_list.std(axis=0))
         diversity_over_time[generation_num] = diversity
     
+
+    # add age to population
+    for ind in population: 
+        ind.age += 1
+
     return fitness_over_time, solutions_over_time, diversity_over_time 
 
 ################################
@@ -308,7 +314,7 @@ def get_fitness(predator, prey):
                 match_end_index = end_index
     
     # return the fitness based on the length of the substring found
-    return len(substring), [match_start_index, match_end_index]
+    return len(substring)-(prey.age*.1), [match_start_index, match_end_index]
     # return len(substring), prey.genome==predator.genome
 
 
