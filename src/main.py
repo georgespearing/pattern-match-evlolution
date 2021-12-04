@@ -37,10 +37,10 @@ import Individual
 
 def main():
 
-    num_runs = 10
+    num_runs = 1
     total_generations = 500
     num_elements_to_mutate = 1
-    bit_string_length = 30
+    bit_string_length = 20
     num_parents = 20
     num_children = 20
     upper_limit = 10
@@ -160,8 +160,8 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
 
     # add population to solution archive to initialize it
-    # for i in range(len(population)):
-    #     solution_archive.append(population[i])
+    for i in range(len(population)):
+        solution_archive.append(population[i])
     
 
     ################################
@@ -238,9 +238,9 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         for i in range(len(new_children)):
             new_children[i].fitness, new_children[i].match_indexes = get_fitness(predator, new_children[i]) # assign fitness to each child 
 
-        # for i in range(len(new_children)):
-        #     new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
-        #     solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
+        for i in range(len(new_children)):
+            new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
+            solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
             
             
         # selection procedure
