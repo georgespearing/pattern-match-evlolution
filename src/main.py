@@ -38,7 +38,7 @@ import Individual
 def main():
 
     num_runs = 20
-    total_generations = 500
+    total_generations = 600
     num_elements_to_mutate = 1
     bit_string_length = 40
     num_parents = 20
@@ -92,8 +92,8 @@ def main():
     # plotting
     data_names = predator_change_amounts
 
-    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'when predator changes', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
-    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'when predator changes', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'when predator changes', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = True)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'when predator changes', x_label = "Generation", y_label = "Diversity", plot_bootstrap = True)
 
 
 ################################
@@ -161,7 +161,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
     for generation_num in range(total_generations): # repeat
 
         # quarter way through the generation, switch % of the genes of the predator
-        if generation_num == (total_generations // 4):
+        if generation_num == int(total_generations // 4) or generation_num == int(total_generations // 2):
             # print("SWITCHING IT UP!")
             predator.genome[0:int(len(predator.genome)*(predator_change))] = np.random.randint(0,10,size=int(len(predator.genome)*(predator_change)))
             print(f'predator change')
