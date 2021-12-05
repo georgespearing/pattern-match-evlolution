@@ -160,7 +160,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             # inheretance
             random_parents = np.random.choice(population, size=num_random_parents) # pick random parents w/ replacement
             new_child = (copy.deepcopy(random_parents[0])) # initialize children as perfect copies of their parents
-            parents[0].age += 1 # age the parent becuase the passed on genes
+            random_parents[0].age += 1 # age the parent becuase the passed on genes
             new_child.age = 0 # children have an age of 0
             
             # crossover -- intelligently combine the best parts of many parents [pattern matching]
