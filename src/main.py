@@ -87,8 +87,8 @@ def main():
     # plotting
     data_names = max_age_options
 
-    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'for different max ages', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
-    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'for different max ages', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'for different max ages', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = True)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'for different max ages', x_label = "Generation", y_label = "Diversity", plot_bootstrap = True)
 
 
 ################################
