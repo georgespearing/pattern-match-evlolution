@@ -51,7 +51,7 @@ def main():
     novelty_selection_prop = 0.1 # lower number means more novelty. .3 or .4 works the best
     max_archive_length = 50
 
-    num_random_parents = [10] # with replacement
+    num_random_parents = [2] # with replacement
 
     experiment_results = {}
     solutions_results = {}
@@ -176,6 +176,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             if crossover=='2Point':
                 [crossover_point1, crossover_point2] = sorted(np.random.randint(0,bit_string_length,2)) # crossover points for 2-point crossover (sorted to make indexing easier in the next step)
                 # uses the second random choice for the random parents (NOTE: due to np random choice, this could be the same parent)
+                random_parents[1].age += 1
                 new_child.genome[crossover_point1:crossover_point2+1] = random_parents[1].genome[crossover_point1:crossover_point2+1] # take the point between the crossover points and swap in the genes from the other parent
 
             # mutation - random bit changes
