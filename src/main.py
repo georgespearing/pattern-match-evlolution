@@ -163,11 +163,13 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
             # inheretance
             random_parents = np.random.choice(population, size=num_random_parents) # pick 5 random parents
             new_child = (copy.deepcopy(random_parents[0])) # initialize children as perfect copies of their parents
+            random_parents[0].age += 1
             new_child.age = 0
 
             # crossover -- intelligently combine the best parts of many parents
             if crossover=='Combinational':
                 for parent in random_parents[1:]: # combine the information from multiple parents into one child.
+                    parent.age += 1 # age the parent becuase the passed on genes
                     new_child.genome[parent.match_indexes[0]:parent.match_indexes[1]] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
             
             # crossover/mutation
@@ -221,11 +223,11 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         # combine parents with new children (the + in mu+lambda)
         population += new_children  
 
-        # age the entire population
-        for ind in population: 
-            ind.age += 1
-            if ind.age >= max_age:
-                population.remove(ind)
+        # # age the entire population
+        # for ind in population: 
+        #     ind.age += 1
+        #     if ind.age >= max_age:
+        #         population.remove(ind)
 
         # Get the top __ fit invididuals
         population = sorted(population, key=lambda individual: individual.fitness, reverse=True) 
