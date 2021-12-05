@@ -13,6 +13,7 @@ class Individual:
         self.fitness = 0
         self.novelty = 0
         self.age = 0
+        self.match_indexes = [0,genome_length]
 
 if __name__=='__main__':
     print("nope, import only")
