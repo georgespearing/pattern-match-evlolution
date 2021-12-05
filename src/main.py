@@ -214,11 +214,12 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         # combine parents with new children (the + in mu+lambda)
         population += new_children  
 
-        # # age the entire population
-        # for ind in population: 
-        #     ind.age += 1
-        #     if ind.age >= max_age:
-        #         population.remove(ind)
+        # age the entire population
+        # killing off the old ones
+        for ind in population: 
+            # ind.age += 1
+            if ind.age >= max_age:
+                population.remove(ind)
 
         # Get the top __ fit invididuals
         population = sorted(population, key=lambda individual: individual.fitness, reverse=True) 
