@@ -38,9 +38,9 @@ import Individual
 def main():
 
     num_runs = 20
-    total_generations = 500
+    total_generations = 600
     num_elements_to_mutate = 1
-    bit_string_length = 50
+    bit_string_length = 40
     num_parents = 20
     num_children = 20
     upper_limit = 10
