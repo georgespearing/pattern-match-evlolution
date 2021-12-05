@@ -37,14 +37,14 @@ import Individual
 
 def main():
 
-    num_runs = 3
+    num_runs = 20
     total_generations = 500
     num_elements_to_mutate = 1
-    bit_string_length = 40
+    bit_string_length = 50
     num_parents = 20
     num_children = 20
     upper_limit = 10
-    max_age = total_generations+1 # age before individual dies, don't do this for parent testing
+    max_age = total_generations/10 # age before individual dies, don't do this for parent testing
     # adding novelty 
     novelty_k = 5
     novelty_selection_prop = 0.1 # lower number means more fitness. .3 or .4 works the best
@@ -68,7 +68,7 @@ def main():
         diversity_results[run_name] = np.zeros((num_runs, total_generations))
 
         for run_num in range(num_runs):
-            print(f'run name: {run_name} num: {run_num}')
+            print(f'Working on run name: {run_name} num: {run_num}')
 
             # run the algorithm
             fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
@@ -81,7 +81,7 @@ def main():
             experiment_results[run_name][run_num] = fitness
             solutions_results[run_name][run_num] = solutions
             diversity_results[run_name][run_num] = diversity
-            print(f'run name: {run_name} | num: {run_num} | fit: {fitness[-1]}')
+            print(f'run name: {run_name} | num: {run_num} | fit: {fitness[-1]}\n')
             # print(fitness[-1])
 
     # plotting
