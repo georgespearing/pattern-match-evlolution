@@ -37,30 +37,21 @@ import Individual
 
 def main():
 
-    num_runs = 1
-    total_generations = 200
+    num_runs = 20
+    total_generations = 500
     num_elements_to_mutate = 1
-    bit_string_length = 20
+    bit_string_length = 50
     num_parents = 20
     num_children = 20
     upper_limit = 10 # for genome encoding
+    max_age = total_generations/10 # age before individual dies, don't do this for parent testing
+
     # adding novelty 
     novelty_k = 5
-    novelty_selection_prop = 0.5 # lower number means more novelty. .3 or .4 works the best
+    novelty_selection_prop = 0.1 # lower number means more novelty. .3 or .4 works the best
     max_archive_length = 50
 
-    num_random_parents = [10] # with replacement
-
-    # n = bit_string_length
-    # k = bit_string_length - 1
-
-    # alg_landscape = Landscape.Landscape(n,k)
-    # fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
-    #                 num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
-    #                 num_elements_to_mutate=num_elements_to_mutate, crossover=True, mutation=True, \
-    #                 novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, upper_limit=upper_limit)
-    # print(f'fit: {fitness[-1]} | sol: {solutions[-1]} | div: {diversity[-1]}')
-
+    num_random_parents = [10] # with replacement found from parent configuration runs
 
     experiment_results = {}
     solutions_results = {}
@@ -83,23 +74,20 @@ def main():
         diversity_results[run_name] = np.zeros((num_runs, total_generations))
 
         for run_num in range(num_runs):
-            # print(f'{run_name} {run_num} fitness: ... ', end='')
+            print(f'Working on run name: {run_name} num: {run_num}')
 
-            # start_time = time.time()
             # run the algorithm
-            # alg_landscape = Landscape.Landscape(n=n, k=k)
             fitness, solutions, diversity = evolutionary_algorithm(total_generations=total_generations, \
                     num_parents=num_parents, num_children=num_children, bit_string_length=bit_string_length, \
                     num_elements_to_mutate=num_elements_to_mutate, crossover=modifications[0][0], mutation=modifications[0][1], \
                     novelty_k = novelty_k, novelty_selection_prop = novelty_selection_prop, max_archive_length = max_archive_length, \
-                    upper_limit=upper_limit, num_random_parents=num_random_parents[0], predator_change=run_name)
+                    upper_limit=upper_limit, num_random_parents=num_random_parents[0], max_age=max_age, predator_change=run_name)
             
             # save the results
             experiment_results[run_name][run_num] = fitness
             solutions_results[run_name][run_num] = solutions
             diversity_results[run_name][run_num] = diversity
-            print(f'{run_name}, {run_num}, {fitness[-1]}, {solutions[-1].astype(int)}')
-            # print(fitness[-1])
+            print(f'run name: {run_name} | num: {run_num} | fit: {fitness[-1]}\n')
 
     # plotting
     data_names = predator_change_amounts
@@ -113,7 +101,8 @@ def main():
 ################################
 
 def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=10, bit_string_length=10, num_elements_to_mutate=1, \
-    crossover=True, mutation=True, novelty_k = 0, novelty_selection_prop = 0, max_archive_length = 100, upper_limit = 3, num_random_parents = 4, predator_change = 0.25):
+    crossover=True, mutation=True, novelty_k = 0, novelty_selection_prop = 0, max_archive_length = 100, upper_limit = 3, num_random_parents = 4, \
+        max_age=10, predator_change = 0.25):
     """
         parameters: 
         fitness_funciton: (callable function) that return the fitness of a genome 
@@ -148,7 +137,7 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
 
     # create the predator (random instantiation)
     predator = Individual.Individual(bit_string_length, upper_limit)
-    print(f'predator genome:             {predator.genome}')
+    # print(f'predator genome:             {predator.genome}')
 
     # create an initial population 
     population = [] # keep population of individuals in a list
@@ -157,12 +146,12 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
     # print(f'population 0 genome:     {population[0].genome}')
 
     # get population fitness
-    # for i in range(len(population)):
-    #     population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
+    for i in range(len(population)):
+        population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
 
     # add population to solution archive to initialize it
-    # for i in range(len(population)):
-    #     solution_archive.append(population[i])
+    for i in range(len(population)):
+        solution_archive.append(population[i])
     
 
     ################################
@@ -175,24 +164,8 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         if generation_num == (total_generations // 4):
             # print("SWITCHING IT UP!")
             predator.genome[0:int(len(predator.genome)*(predator_change))] = np.random.randint(0,10,size=int(len(predator.genome)*(predator_change)))
-            print(f'predator change to {predator.genome}')
+            print(f'predator change')
 
-            # # get population fitness - reassesss after predator changes. 
-            # for i in range(len(population)):
-            #     population[i].fitness, population[i].match_indexes = get_fitness(predator, population[i]) # evaluate the fitness of each parent
-        # if generation_num % 100 == 0:
-        #     print(generation_num)
-
-        # # check for percent change in fitness. If not enough, add more muations
-        # if generation_num > 50:
-        #     last_fitness = fitness_over_time[generation_num-1]
-        #     last_last_fitness = fitness_over_time[generation_num-20]
-        #     change_in_fitness = ((last_fitness - last_last_fitness)/last_last_fitness)
-        #     if change_in_fitness <= 0 and generation_num % 25==0:
-        #         num_elements_to_mutate += 1
-        #         if num_elements_to_mutate >= bit_string_length:
-        #             num_elements_to_mutate = bit_string_length
-        
         # the modification procedure
         new_children = [] # keep children separate for now (lambda in mu+lambda)
         while len(new_children) < num_children:
@@ -210,14 +183,6 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
                 for parent in random_parents[1:]: # combine the information from multiple parents into one child.
                     new_child.genome[parent.match_indexes[0]:parent.match_indexes[1]] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
             
-            # # crossover/mutation
-            # if crossover:
-            #     for parent in random_parents[1:]: # combine the information from multiple parents into one child.
-            #         # generate two new inteters for index that are the same distance apart as the parent match indexes
-            #         diff = parent.match_indexes[1] - parent.match_indexes[0]
-            #         rand_start = np.random.randint(0,len(parent.genome)-diff)
-            #         new_child.genome[rand_start:rand_start+diff] = parent.genome[parent.match_indexes[0]:parent.match_indexes[1]] # for replacing patterns that match 
-
             # mutation - random bit changes
             if mutation:
                 # for this_child in [child1,child2]:
@@ -228,8 +193,6 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
                     # new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
                     new_child.genome[this_element_to_mutate] = np.random.randint(0,np.max(predator.genome)+1)
 
-        
-            
             # new_children.extend((child1,child2)) # add children to the new_children list
             new_children.append(new_child) # add children to the new_children list
         ################################
@@ -238,51 +201,56 @@ def evolutionary_algorithm(total_generations=100, num_parents=10, num_children=1
         for i in range(len(new_children)):
             new_children[i].fitness, new_children[i].match_indexes = get_fitness(predator, new_children[i]) # assign fitness to each child 
 
-        # for i in range(len(new_children)):
-        #     new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
-        #     solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
-
-        # also reassesss all the parents (because they just fought the virus too)
-        for p in population:
-            p.fitness, p.match_indexes = get_fitness(predator, p)    
+        for i in range(len(new_children)):
+            new_children[i].novelty = get_novelty(solution_archive, new_children[i], novelty_k) # assign fitness to each child            
+            solution_archive = update_archive(solution_archive, new_children[i], max_archive_length)
             
-        # selection procedure
-        population += new_children # combine parents with new children (the + in mu+lambda)
-        population = sorted(population, key=lambda individual: individual.fitness, reverse=True) # sort the full population by each individual's fitness (from highers to lowest)
-        new_population = population[:int(num_parents*(1-novelty_selection_prop))] # perform truncation selection (keep just top mu individuals to become next set of parents)
-        
+        ################################
+        #      SELECTION PROCEDURE     #
+        ################################
+
+        # combine parents with new children (the + in mu+lambda)
+        population += new_children  
+
+        # age the entire population
+        for ind in population: 
+            ind.age += 1
+            if ind.age >= max_age:
+                population.remove(ind)
+
+        # Get the top __ fit invididuals
+        population = sorted(population, key=lambda individual: individual.fitness, reverse=True) 
+        # perform truncation selection for top % fitt individuals
+        new_population = population[:int(num_parents*(1-novelty_selection_prop))] 
+
+        # fill in the rest of next generation with novel solutions
         population = sorted(population, key=lambda individual: individual.novelty, reverse=True) # sort the full population by each individual's fitness (from highers to lowest)
         while len(new_population) < num_parents:
-            # print("adding novelty")
             this_ind = population.pop()
             if not this_ind in new_population:
                 new_population.append(this_ind)
 
 
-        # print(f'child genome:            {new_child.genome}')
+        ################################
+        #         RECORD KEEPING       #
+        ################################
 
-        # NOTE: recording keeping could be on just parents/survivors or whole population.  
-        # By moving it up here above selection, we also include the children while record keeping
-        # record keeping
-        population = sorted(population, key=lambda individual: individual.fitness, reverse=True) # sort the full population by each individual's fitness (from highers to lowest)
+        # sort by fitness again
+        population = sorted(new_population, key=lambda individual: individual.fitness, reverse=True)
         if population[0].fitness > solution_fitness: # if the new parent is the best found so far
             solution = population[0].genome                 # update best solution records
             # solution_fitness = population[0].fitness
-            solution_fitness = int(np.mean([population[i].fitness for i in range(len(population))])) # prioritize group fitness
 
-        fitness_over_time[generation_num] = solution_fitness # record the fitness of the current best over evolutionary time
+            # prioritize group fitness by setting solution fitness to the mean of the group
+            solution_fitness = int(np.mean([population[i].fitness for i in range(len(population))])) 
+
+        # record the fitness of the current best over evolutionary time
+        fitness_over_time[generation_num] = solution_fitness 
         solutions_over_time[generation_num] = solution
         
         genome_list = np.array([individual.genome for individual in population])
         diversity = np.mean(genome_list.std(axis=0))
         diversity_over_time[generation_num] = diversity
-    
-
-    # add age to population
-    for ind in population: 
-        ind.age += 1
-        if ind.age >=20:
-            population = np.delete(population, ind)
 
     return fitness_over_time, solutions_over_time, diversity_over_time 
 
@@ -314,10 +282,11 @@ def get_fitness(predator, prey):
                 substring = prey_substring
                 match_start_index = start_index
                 match_end_index = end_index
+
+    fitness = len(substring)
     
     # return the fitness based on the length of the substring found
-    return len(substring), [match_start_index, match_end_index]
-    # return len(substring), prey.genome==predator.genome
+    return fitness, [match_start_index, match_end_index]
 
 
 ################################
