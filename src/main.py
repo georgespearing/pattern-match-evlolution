@@ -37,7 +37,7 @@ import Individual
 
 def main():
 
-    num_runs = 2
+    num_runs = 20
     total_generations = 500
     num_elements_to_mutate = 1
     bit_string_length = 40
