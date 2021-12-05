@@ -37,10 +37,10 @@ import Individual
 
 def main():
 
-    num_runs = 20
+    num_runs = 2
     total_generations = 500
     num_elements_to_mutate = 1
-    bit_string_length = 50
+    bit_string_length = 40
     num_parents = 20
     num_children = 20
     upper_limit = 10
@@ -50,7 +50,7 @@ def main():
     novelty_selection_prop = 0.1 # lower number means more fitness. .3 or .4 works the best
     max_archive_length = 50
 
-    num_random_parents = [2, 5, 10, 20] # with replacement
+    max_age_options = [50, 100, 250, 600] # with replacement
 
     experiment_results = {}
     solutions_results = {}
@@ -61,7 +61,7 @@ def main():
 
     # for parents in num_random_parents: # run a bunch of different parent combindations
 
-    for run_index, run_name in enumerate(num_random_parents):
+    for run_index, run_name in enumerate(max_age_options):
 
         experiment_results[run_name] = np.zeros((num_runs, total_generations))
         solutions_results[run_name] = np.zeros((num_runs, total_generations, bit_string_length), dtype=int)
@@ -87,8 +87,8 @@ def main():
     # plotting
     data_names = num_random_parents
 
-    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'for different # parents', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
-    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'for different # parents', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'for different max ages', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = False)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'for different max ages', x_label = "Generation", y_label = "Diversity", plot_bootstrap = False)
 
 
 ################################
@@ -347,7 +347,7 @@ def plot_mean_and_bootstrapped_ci_over_time(input_data = None, name = "change me
                 boostrap_ci_generation_found[:,this_gen] = bootstrap.ci(this_input_data[:,this_gen], np.mean, alpha=0.05)
 
         ax.set_title(f'{y_label} over generations {title}')
-        ax.plot(np.arange(total_generations), np.mean(this_input_data,axis=0), label = f'{this_name} parents') # plot the fitness over time
+        ax.plot(np.arange(total_generations), np.mean(this_input_data,axis=0), label = f'age {this_name} remove') # plot the fitness over time
         if plot_bootstrap:
             ax.fill_between(np.arange(total_generations), boostrap_ci_generation_found[0,:], boostrap_ci_generation_found[1,:],alpha=0.3) # plot, and fill, the confidence interval for fitness over time
         ax.set_xlabel(x_label) # add axes labels
