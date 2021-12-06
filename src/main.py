@@ -64,7 +64,7 @@ def main():
     # modifications = [[False, True], [True, True]]
     modifications = [[True, True]]
 
-    predator_change_amounts = [0.25, 0.50, 0.75]
+    predator_change_amounts = [0, 0.25, 0.50, 0.75]
 
 
     for run_index, run_name in enumerate(predator_change_amounts):
@@ -93,7 +93,7 @@ def main():
     data_names = predator_change_amounts
 
     plot_mean_and_bootstrapped_ci_over_time(input_data = experiment_results, name = data_names, title=f'when predator changes', x_label = "Generation", y_label = "Fitness", y_limit = [0,bit_string_length], plot_bootstrap = True)
-    # plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'when predator changes', x_label = "Generation", y_label = "Diversity", plot_bootstrap = True)
+    plot_mean_and_bootstrapped_ci_over_time(input_data = diversity_results, name = data_names, title=f'when predator changes', x_label = "Generation", y_label = "Diversity", plot_bootstrap = True)
 
 
 ################################
